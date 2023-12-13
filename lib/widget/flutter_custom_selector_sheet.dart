@@ -15,7 +15,7 @@ class CustomBottomSheetSelector<T> {
     required List<T> initialSelection,
     required Color selectedItemColor,
     bool isAllOptionEnable = false,
-    required void Function() paginationFunction, // Added pagination function
+    void Function()? paginationFunction, // Made the parameter nullable
   }) async {
     List<T> _selectedList = <T>[];
     bool _selectionDone = false;
@@ -77,7 +77,6 @@ class CustomBottomSheetSelector<T> {
                           onNotification: (ScrollNotification scrollInfo) {
                             if (scrollInfo.metrics.pixels ==
                                 scrollInfo.metrics.maxScrollExtent) {
-                              // Call your function when the end is reached
                               _onEndReached(paginationFunction);
                             }
                             return false;
@@ -146,7 +145,7 @@ class CustomBottomSheetSelector<T> {
                                 children: [
                                   for (CustomMultiSelectDropdownItem<T> _item
                                       in _searchedItems.isNotEmpty
-                                          ? _searchedItems
+                                          ? _searched_items
                                           : dropdownItems)
                                     Column(
                                       children: [
@@ -306,7 +305,7 @@ class CustomBottomSheetSelector<T> {
     };
   }
 
-  void _onEndReached(void Function() paginationFunction) {
-    paginationFunction();
+  void _onEndReached(void Function()? paginationFunction) {
+    paginationFunction?.call();
   }
 }
