@@ -15,7 +15,7 @@ class CustomSingleSelectField<T> extends StatefulWidget
   final T? initialValue;
   final Color selectedItemColor;
   final List<T> items;
-
+  final void Function()? onArriveToEnd;
   CustomSingleSelectField({
     Key? key,
     required this.items,
@@ -58,6 +58,7 @@ class _CustomSingleSelectFieldState<T>
           buttonType: CustomDropdownButtonType.singleSelect,
           headerName: widget.title,
           dropdownItems: _getDropdownItems(list: widget.items),
+            onArriveToEnd:widget.onArriveToEnd
         );
 
         if (result[selectedList] != null) {
