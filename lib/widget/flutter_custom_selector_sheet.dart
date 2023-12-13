@@ -5,6 +5,8 @@ import '../utils/utils.dart';
 import 'flutter_custom_select_button.dart';
 
 class CustomBottomSheetSelector<T> {
+  ScrollController _scrollController = ScrollController();
+
   Future<Map<String, List<T>?>> customBottomSheet({
     required BuildContext buildContext,
     required String headerName,
@@ -13,6 +15,7 @@ class CustomBottomSheetSelector<T> {
     required List<T> initialSelection,
     required Color selectedItemColor,
     bool isAllOptionEnable = false,
+    required void Function() paginationFunction, // Added pagination function
   }) async {
     List<T> _selectedList = <T>[];
     bool _selectionDone = false;
@@ -35,43 +38,52 @@ class CustomBottomSheetSelector<T> {
     }
 
     await showModalBottomSheet(
-        context: buildContext,
-        backgroundColor: Colors.transparent,
-        enableDrag: true,
-        builder: (BuildContext bc) {
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Flexible(
-                child: Container(
-                  clipBehavior: Clip.antiAlias,
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: StatefulBuilder(builder: (_, setState) {
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          color: Colors.grey.shade200,
-                          width: double.infinity,
-                          alignment: Alignment.center,
-                          child: Text(
-                            headerName,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                              // decoration: TextDecoration.underline,
-                            ),
+      context: buildContext,
+      backgroundColor: Colors.transparent,
+      enableDrag: true,
+      builder: (BuildContext bc) {
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Flexible(
+              child: Container(
+                clipBehavior: Clip.antiAlias,
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: StatefulBuilder(builder: (_, setState) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        color: Colors.grey.shade200,
+                        width: double.infinity,
+                        alignment: Alignment.center,
+                        child: Text(
+                          headerName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
                           ),
                         ),
-                        Flexible(
+                      ),
+                      Flexible(
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: (ScrollNotification scrollInfo) {
+                            if (scrollInfo.metrics.pixels ==
+                                scrollInfo.metrics.maxScrollExtent) {
+                              // Call your function when the end is reached
+                              _onEndReached(paginationFunction);
+                            }
+                            return false;
+                          },
                           child: ListView(
+                            controller: _scrollController,
                             shrinkWrap: true,
                             physics: const AlwaysScrollableScrollPhysics(),
                             children: [
@@ -198,7 +210,6 @@ class CustomBottomSheetSelector<T> {
                                               color: _item.selected
                                                   ? selectedItemColor
                                                   : Colors.black),
-                                          // buttonTextColor: Colors.black,
                                           buttonText: _item.buttonText,
                                         ),
                                         Container(
@@ -216,84 +227,86 @@ class CustomBottomSheetSelector<T> {
                             ],
                           ),
                         ),
-                        const SizedBox(
-                          height: 4,
-                        ),
-                      ],
-                    );
-                  }),
-                ),
+                      ),
+                      const SizedBox(
+                        height: 4,
+                      ),
+                    ],
+                  );
+                }),
               ),
-              buttonType == CustomDropdownButtonType.multiSelect
-                  ? Container(
-                      width: MediaQuery.of(bc).size.width - 40,
-                      margin: const EdgeInsets.only(top: 10, bottom: 10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: MaterialButton(
-                        onPressed: () {
-                          _selectionDone = true;
-                          Navigator.pop(
-                            buildContext,
-                          );
-                        },
-                        color: Colors.grey.shade200,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0)),
-                        minWidth: MediaQuery.of(bc).size.width - 40,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 10),
-                          child: const Center(
-                            child: Text(
-                              "Done",
-                              style: TextStyle(
-                                // color: pink,
-                                // fontFamily: fontsFamily.MontserratMedium,
-                                fontSize: 20,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                  : Container(
-                      width: MediaQuery.of(bc).size.width - 40,
-                      margin: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: MaterialButton(
-                        onPressed: () {
-                          _selectionDone = false;
-                          Navigator.pop(buildContext);
-                        },
-                        color: Colors.grey.shade200,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0)),
-                        minWidth: MediaQuery.of(bc).size.width - 40,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 10),
-                          child: const Center(
-                            child: Text(
-                              "Cancel",
-                              style: TextStyle(
-                                // color: pink,
-                                // fontFamily: fontsFamily.MontserratMedium,
-                                fontSize: 20,
-                              ),
+            ),
+            buttonType == CustomDropdownButtonType.multiSelect
+                ? Container(
+                    width: MediaQuery.of(bc).size.width - 40,
+                    margin: const EdgeInsets.only(top: 10, bottom: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: MaterialButton(
+                      onPressed: () {
+                        _selectionDone = true;
+                        Navigator.pop(
+                          buildContext,
+                        );
+                      },
+                      color: Colors.grey.shade200,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0)),
+                      minWidth: MediaQuery.of(bc).size.width - 40,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                        child: const Center(
+                          child: Text(
+                            "Done",
+                            style: TextStyle(
+                              fontSize: 20,
                             ),
                           ),
                         ),
                       ),
                     ),
-            ],
-          );
-        });
+                  )
+                : Container(
+                    width: MediaQuery.of(bc).size.width - 40,
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: MaterialButton(
+                      onPressed: () {
+                        _selectionDone = false;
+                        Navigator.pop(buildContext);
+                      },
+                      color: Colors.grey.shade200,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0)),
+                      minWidth: MediaQuery.of(bc).size.width - 40,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                        child: const Center(
+                          child: Text(
+                            "Cancel",
+                            style: TextStyle(
+                              fontSize: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+          ],
+        );
+      },
+    );
     return {
       selectedList: _selectionDone ? _selectedList : null,
     };
+  }
+
+  void _onEndReached(void Function() paginationFunction) {
+    paginationFunction();
   }
 }
